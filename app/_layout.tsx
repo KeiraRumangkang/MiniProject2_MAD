@@ -1,12 +1,21 @@
+import "react-native-get-random-values";
+import "react-native-url-polyfill/auto";
+
+import { ConvexProvider, ConvexReactClient } from "convex/react";
 import { Stack } from "expo-router";
+
+// buat client Convex
+const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!);
 
 export default function Layout() {
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="login" />
-      <Stack.Screen name="mahasiswa" />
-      <Stack.Screen name="staff" />
-      <Stack.Screen name="kepala" />
-    </Stack>
+    <ConvexProvider client={convex}>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="login" />
+        <Stack.Screen name="mahasiswa" />
+        <Stack.Screen name="staff" />
+        <Stack.Screen name="kepala" />
+      </Stack>
+    </ConvexProvider>
   );
 }
