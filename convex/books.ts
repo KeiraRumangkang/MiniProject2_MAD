@@ -111,3 +111,55 @@ export const deleteBook = mutation({
     return { success: true };
   },
 });
+
+export const addFavorite = mutation({
+  args: {
+    userId: v.id("users"),
+    bookId: v.id("books"),
+  },
+  handler: async (ctx, args) => {
+
+    const existing = await ctx.db
+      .query("favorites")
+      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+      .collect();
+
+    const already = existing.find((f) => f.bookId === args.bookId);
+
+    if (already) {
+      return { success: false };
+    }
+
+    await ctx.db.insert("favorites", {
+      userId: args.userId,
+      bookId: args.bookId,
+      createdAt: Date.now(),
+    });
+
+    return { success: true };
+  },
+});
+
+export const getUserFavorites = query({
+  args: {
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+
+    const favorites = await ctx.db
+      .query("favorites")
+      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+      .collect();
+
+    const books = [];
+
+    for (const fav of favorites) {
+      const book = await ctx.db.get(fav.bookId);
+      if (book) {
+        books.push(book);
+      }
+    }
+
+    return books;
+  },
+});
