@@ -10,6 +10,7 @@
 
 import type * as books from "../books.js";
 import type * as borrowings from "../borrowings.js";
+import type * as dashboard from "../dashboard.js";
 import type * as forum from "../forum.js";
 import type * as notifications from "../notifications.js";
 import type * as seed from "../seed.js";
@@ -24,6 +25,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   books: typeof books;
   borrowings: typeof borrowings;
+  dashboard: typeof dashboard;
   forum: typeof forum;
   notifications: typeof notifications;
   seed: typeof seed;
