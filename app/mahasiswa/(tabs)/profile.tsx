@@ -1,13 +1,41 @@
+/**
+ * ========================================
+ * HALAMAN PROFIL MAHASISWA
+ * ========================================
+ * Nampilin data profil mahasiswa yang lagi login.
+ * 
+ * Fitur utama:
+ * - Info profil (nama, fakultas, poin)
+ * - Badges yang udah diraih (dinamis dari database)
+ * - Statistik aktivitas (total peminjaman, review, poin)
+ * 
+ * Data flow:
+ * - Ambil userId dari getMahasiswaList (sementara user pertama)
+ * - Query ke getMahasiswaProfile buat dapetin stats + badges
+ * - Semua data REAL dari database, bukan hardcoded
+ * 
+ * TODO: nanti ganti userId pake auth session yang benar
+ * ========================================
+ */
+
 import { useQuery } from "convex/react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { api } from "../../../convex/_generated/api";
 
 export default function Profile() {
 
-  // sementara pakai user pertama dari database
+  // sementara pakai user pertama dari database, nanti ganti pake auth session
   const users = useQuery(api.users.getMahasiswaList);
+  const userId = users?.[0]?._id;
 
-  if (!users) {
+  // ambil data profil + statistik dari backend (bukan hardcoded!)
+  const profileData = useQuery(
+    api.users.getMahasiswaProfile,
+    userId ? { userId } : "skip"
+  );
+
+  // loading state
+  if (!profileData) {
     return (
       <View style={styles.center}>
         <Text>Loading...</Text>
@@ -15,90 +43,65 @@ export default function Profile() {
     );
   }
 
-  const user = users[0];
+  // destructure data profil
+  const { user, totalBorrowed, totalReviews, badges } = profileData;
 
   return (
     <ScrollView style={styles.container}>
 
-      {/* PROFILE CARD */}
+      {/* PROFILE CARD - info utama user */}
       <View style={styles.profileCard}>
 
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>👤</Text>
         </View>
 
-        <Text style={styles.name}>
-          {user.name}
-        </Text>
-
-        <Text style={styles.faculty}>
-          {user.faculty}
-        </Text>
-
-        <Text style={styles.points}>
-          ⭐ {user.points} Points
-        </Text>
+        <Text style={styles.name}>{user.name}</Text>
+        <Text style={styles.faculty}>{user.faculty}</Text>
+        <Text style={styles.points}>⭐ {user.points} Points</Text>
 
       </View>
 
-      {/* BADGES */}
-      <Text style={styles.sectionTitle}>
-        🎖️ Badges
-      </Text>
+      {/* 
+        BADGES - diambil dari tabel userBadges + badges di database
+        Kalo belum punya badge, tampilin pesan motivasi 
+      */}
+      <Text style={styles.sectionTitle}>🎖️ Badges</Text>
 
       <View style={styles.badgeContainer}>
-
-        <View style={styles.badge}>
-          <Text style={styles.badgeIcon}>📚</Text>
-          <Text style={styles.badgeText}>
-            Book Explorer
-          </Text>
-        </View>
-
-        <View style={styles.badge}>
-          <Text style={styles.badgeIcon}>🔥</Text>
-          <Text style={styles.badgeText}>
-            Active Reader
-          </Text>
-        </View>
-
-        <View style={styles.badge}>
-          <Text style={styles.badgeIcon}>💬</Text>
-          <Text style={styles.badgeText}>
-            Forum Contributor
-          </Text>
-        </View>
-
+        {badges.length > 0 ? (
+          badges.map((badge) => (
+            <View key={badge._id} style={styles.badge}>
+              <Text style={styles.badgeIcon}>{badge.icon || "🏅"}</Text>
+              <Text style={styles.badgeText}>{badge.name}</Text>
+            </View>
+          ))
+        ) : (
+          <Text style={styles.noBadge}>Belum punya badge nih, ayo pinjam buku!</Text>
+        )}
       </View>
 
-      {/* STATS */}
-      <Text style={styles.sectionTitle}>
-        📊 Activity
-      </Text>
+      {/* 
+        STATISTIK AKTIVITAS - data real dari database
+        Sebelumnya hardcoded "12" dan "5", sekarang ngambil dari query 
+      */}
+      <Text style={styles.sectionTitle}>📊 Aktivitas</Text>
 
       <View style={styles.statsCard}>
 
         <View style={styles.stat}>
-          <Text style={styles.statNumber}>12</Text>
-          <Text style={styles.statLabel}>
-            Books Borrowed
-          </Text>
+          <Text style={styles.statNumber}>{totalBorrowed}</Text>
+          <Text style={styles.statLabel}>Buku Dipinjam</Text>
         </View>
 
         <View style={styles.stat}>
-          <Text style={styles.statNumber}>5</Text>
-          <Text style={styles.statLabel}>
-            Reviews
-          </Text>
+          <Text style={styles.statNumber}>{totalReviews}</Text>
+          <Text style={styles.statLabel}>Review</Text>
         </View>
 
         <View style={styles.stat}>
-          <Text style={styles.statNumber}>
-            {user.points}
-          </Text>
-          <Text style={styles.statLabel}>
-            Points
-          </Text>
+          <Text style={styles.statNumber}>{user.points}</Text>
+          <Text style={styles.statLabel}>Poin</Text>
         </View>
 
       </View>
@@ -107,6 +110,9 @@ export default function Profile() {
   );
 }
 
+// ========================================
+// STYLES
+// ========================================
 const styles = StyleSheet.create({
 
   container: {
@@ -121,6 +127,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
+  // card profil utama (centered, shadow buat depth)
   profileCard: {
     backgroundColor: "white",
     padding: 20,
@@ -169,8 +176,10 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
 
+  // container badge pake flexWrap biar otomatis pindah baris
   badgeContainer: {
     flexDirection: "row",
+    flexWrap: "wrap",
     marginBottom: 25,
   },
 
@@ -179,6 +188,7 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 10,
     marginRight: 10,
+    marginBottom: 8,
     alignItems: "center",
     shadowColor: "#000",
     shadowOpacity: 0.1,
@@ -195,6 +205,12 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
 
+  noBadge: {
+    color: "#999",
+    fontSize: 14,
+  },
+
+  // card statistik (3 kolom sejajar)
   statsCard: {
     backgroundColor: "white",
     padding: 20,
@@ -205,6 +221,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 6,
     elevation: 4,
+    marginBottom: 30,
   },
 
   stat: {
