@@ -163,3 +163,70 @@ export const getUserFavorites = query({
     return books;
   },
 });
+
+// ==================== STAFF APIS ====================
+
+export const updateBook = mutation({
+  args: {
+    bookId: v.id("books"),
+    title: v.string(),
+    author: v.string(),
+    synopsis: v.string(),
+    categoryId: v.id("bookCategories"),
+    year: v.number(),
+    stockTotal: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const book = await ctx.db.get(args.bookId);
+    if (!book) throw new Error("Buku tidak ditemukan");
+
+    const borrowedCount = book.stockTotal - book.stockAvailable;
+    const newAvailable = Math.max(0, args.stockTotal - borrowedCount);
+
+    await ctx.db.patch(args.bookId, {
+      title: args.title,
+      author: args.author,
+      synopsis: args.synopsis,
+      categoryId: args.categoryId,
+      year: args.year,
+      stockTotal: args.stockTotal,
+      stockAvailable: newAvailable,
+      status:
+        newAvailable <= 0
+          ? "unavailable"
+          : newAvailable <= 2
+          ? "limited"
+          : "available",
+    });
+
+    return { success: true };
+  },
+});
+
+export const getBookCategories = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db.query("bookCategories").collect();
+  },
+});
+
+export const addBookCategory = mutation({
+  args: {
+    name: v.string(),
+    description: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("bookCategories")
+      .withIndex("by_name", (q) => q.eq("name", args.name))
+      .first();
+
+    if (existing) throw new Error("Kategori sudah ada");
+
+    return await ctx.db.insert("bookCategories", {
+      name: args.name,
+      description: args.description || "",
+      createdAt: Date.now(),
+    });
+  },
+});
