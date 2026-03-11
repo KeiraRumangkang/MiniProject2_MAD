@@ -117,3 +117,54 @@ export const getLateBorrowings = query({
       .collect();
   },
 });
+
+// ==================== STAFF APIS ====================
+
+export const getAllBorrowings = query({
+  args: {},
+  handler: async (ctx) => {
+    const borrowings = await ctx.db.query("borrowings").collect();
+    const users = await ctx.db.query("users").collect();
+    const books = await ctx.db.query("books").collect();
+    const now = Date.now();
+
+    return borrowings.map((b) => {
+      const user = users.find((u) => u._id === b.userId);
+      const book = books.find((bk) => bk._id === b.bookId);
+      const isOverdue = b.status === "borrowed" && b.dueDate < now;
+      const daysLate = isOverdue
+        ? Math.ceil((now - b.dueDate) / (1000 * 60 * 60 * 24))
+        : b.status === "late"
+        ? Math.ceil((now - b.dueDate) / (1000 * 60 * 60 * 24))
+        : 0;
+
+      return {
+        ...b,
+        userName: user?.name || "Unknown",
+        bookTitle: book?.title || "Unknown",
+        daysLate,
+        effectiveStatus: isOverdue ? "late" : b.status,
+      };
+    }).sort((a, b) => b.createdAt - a.createdAt);
+  },
+});
+
+export const rejectBorrowing = mutation({
+  args: {
+    borrowingId: v.id("borrowings"),
+    staffId: v.id("users"),
+    notes: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const borrowing = await ctx.db.get(args.borrowingId);
+    if (!borrowing) throw new Error("Peminjaman tidak ditemukan");
+
+    await ctx.db.patch(args.borrowingId, {
+      status: "rejected",
+      verifiedByStaffId: args.staffId,
+      notes: args.notes || "Ditolak oleh staff",
+    });
+
+    return { success: true };
+  },
+});

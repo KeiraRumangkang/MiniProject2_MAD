@@ -104,3 +104,37 @@ export const likePost = mutation({
     return { success: true };
   },
 });
+
+// ==================== STAFF MODERATION APIS ====================
+
+export const deleteForumPost = mutation({
+  args: {
+    postId: v.id("forumPosts"),
+  },
+  handler: async (ctx, args) => {
+    const post = await ctx.db.get(args.postId);
+    if (!post) throw new Error("Post tidak ditemukan");
+
+    await ctx.db.patch(args.postId, {
+      isDeleted: true,
+    });
+
+    return { success: true };
+  },
+});
+
+export const pinForumPost = mutation({
+  args: {
+    postId: v.id("forumPosts"),
+  },
+  handler: async (ctx, args) => {
+    const post = await ctx.db.get(args.postId);
+    if (!post) throw new Error("Post tidak ditemukan");
+
+    await ctx.db.patch(args.postId, {
+      isPinned: !post.isPinned,
+    });
+
+    return { success: true, isPinned: !post.isPinned };
+  },
+});
