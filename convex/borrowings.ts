@@ -1,6 +1,32 @@
+/**
+ * ========================================
+ * BORROWINGS API — PEMINJAMAN BUKU
+ * ========================================
+ * File ini ngurus semua operasi terkait peminjaman buku.
+ * 
+ * Queries:
+ * - getBorrowingByUser        → ambil peminjaman per mahasiswa (raw)
+ * - getBorrowingByUserEnriched → ambil peminjaman + info buku (buat UI mahasiswa)
+ * - getLateBorrowings         → ambil yang terlambat (buat dashboard)
+ * - getAllBorrowings           → ambil semua + info user/buku (buat UI staff)
+ * 
+ * Mutations:
+ * - borrowBook       → mahasiswa pinjam buku (status: requested)
+ * - verifyBorrowing  → staff setujui peminjaman (status: borrowed, stok berkurang)
+ * - returnBook       → staff verifikasi pengembalian (status: returned, stok nambah)
+ * - rejectBorrowing  → staff tolak peminjaman (status: rejected)
+ * 
+ * Status flow peminjaman:
+ * requested → [verifyBorrowing] → borrowed → [returnBook] → returned
+ * requested → [rejectBorrowing] → rejected
+ * borrowed (lewat deadline) → late
+ * ========================================
+ */
+
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
+// mahasiswa pinjam buku — status awal "requested" (belum diverifikasi staff)
 export const borrowBook = mutation({
   args: {
     userId: v.id("users"),
@@ -115,6 +141,40 @@ export const getLateBorrowings = query({
       .query("borrowings")
       .withIndex("by_status", (q) => q.eq("status", "late"))
       .collect();
+  },
+});
+
+// ==================== MAHASISWA API ====================
+
+// ambil semua peminjaman mahasiswa, lengkap sama judul buku
+export const getBorrowingByUserEnriched = query({
+  args: {
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    const borrowings = await ctx.db
+      .query("borrowings")
+      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+      .collect();
+
+    const now = Date.now();
+
+    // gabungin data buku ke tiap peminjaman
+    const enriched = [];
+    for (const b of borrowings) {
+      const book = await ctx.db.get(b.bookId);
+      const isOverdue = b.status === "borrowed" && b.dueDate < now;
+
+      enriched.push({
+        ...b,
+        bookTitle: book?.title || "Buku tidak ditemukan",
+        bookAuthor: book?.author || "-",
+        effectiveStatus: isOverdue ? "late" : b.status,
+      });
+    }
+
+    // urutkan dari yang paling baru
+    return enriched.sort((a, b) => b.createdAt - a.createdAt);
   },
 });
 
