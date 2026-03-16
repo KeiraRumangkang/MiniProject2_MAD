@@ -202,3 +202,38 @@ export const pinForumPost = mutation({
     return { success: true, isPinned: !post.isPinned };
   },
 });
+
+export const updateForumPost = mutation({
+  args: {
+    postId: v.id("forumPosts"),
+    category: v.union(
+      v.literal("review_buku"),
+      v.literal("rekomendasi_buku"),
+      v.literal("tanya_buku"),
+      v.literal("diskusi_pengetahuan"),
+      v.literal("buku_skripsi")
+    ),
+    title: v.string(),
+    content: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const post = await ctx.db.get(args.postId);
+    if (!post) throw new Error("Post tidak ditemukan");
+    if (post.isDeleted) throw new Error("Post sudah dihapus");
+
+    const title = args.title.trim();
+    const content = args.content.trim();
+
+    if (!title || !content) {
+      throw new Error("Judul dan isi post wajib diisi");
+    }
+
+    await ctx.db.patch(args.postId, {
+      category: args.category,
+      title,
+      content,
+    });
+
+    return { success: true };
+  },
+});

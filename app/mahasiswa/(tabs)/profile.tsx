@@ -1,13 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from 'convex/react';
 import { useRouter } from 'expo-router';
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { api } from '../../../convex/_generated/api';
 import { useAuthSession } from '@/lib/auth-session';
 
 export default function Profile() {
-  const { activeSession, signOut } = useAuthSession();
+  const { activeSession, signOutAll } = useAuthSession();
   const router = useRouter();
   const userId = activeSession?.role === 'mahasiswa' ? (activeSession.userId as any) : undefined;
 
@@ -97,19 +97,10 @@ export default function Profile() {
 
       <TouchableOpacity
         style={styles.logoutButton}
-        onPress={() =>
-          Alert.alert('Logout', 'Keluar dari akun mahasiswa?', [
-            { text: 'Batal', style: 'cancel' },
-            {
-              text: 'Keluar',
-              style: 'destructive',
-              onPress: async () => {
-                await signOut('mahasiswa');
-                router.replace('/login');
-              },
-            },
-          ])
-        }
+        onPress={async () => {
+          await signOutAll();
+          router.replace('/login');
+        }}
       >
         <Ionicons name="log-out-outline" size={16} color="#FFFFFF" />
         <Text style={styles.logoutText}>Logout</Text>

@@ -2,14 +2,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from 'convex/react';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { api } from '../../convex/_generated/api';
 import { useAuthSession } from '@/lib/auth-session';
 
 export default function ProfilKepala() {
   const router = useRouter();
   const [isNotifEnabled, setIsNotifEnabled] = useState(true);
-  const { signOut } = useAuthSession();
+  const { signOutAll } = useAuthSession();
   
   // Ambil data asli dari database Convex
   const userProfile = useQuery(api.dashboard.getCurrentKepalaProfile);
@@ -31,18 +31,9 @@ export default function ProfilKepala() {
   const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(namaUser)}&background=2F80ED&color=fff&size=200`;
 
   // --- HANDLERS ---
-  const handleLogout = () => {
-    Alert.alert("Konfirmasi Keluar", "Apakah Anda yakin ingin keluar?", [
-      { text: "Batal", style: "cancel" },
-      {
-        text: "Keluar",
-        style: "destructive",
-        onPress: async () => {
-          await signOut('kepala');
-          router.replace('/login');
-        },
-      }
-    ]);
+  const handleLogout = async () => {
+    await signOutAll();
+    router.replace('/login');
   };
 
   const handleEditProfile = () => {

@@ -1,17 +1,17 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Dimensions, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Dimensions, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from 'convex/react';
 import { useRouter } from 'expo-router';
 import { api } from '../../convex/_generated/api';
-import { StaffErrorState, StaffHeader, StaffLoadingState, cardShadow } from './_shared';
+import { StaffErrorState, StaffHeader, StaffLoadingState, cardShadow } from '@/lib/staff-shared';
 import { useAuthSession } from '@/lib/auth-session';
 
 const { width } = Dimensions.get('window');
 
 export default function StaffDashboard() {
   const stats = useQuery(api.dashboard.getStaffDashboardStats);
-  const { signOut } = useAuthSession();
+  const { signOutAll } = useAuthSession();
   const router = useRouter();
 
   if (stats === undefined) {
@@ -105,19 +105,10 @@ export default function StaffDashboard() {
 
           <TouchableOpacity
             style={styles.logoutButton}
-            onPress={() =>
-              Alert.alert('Logout', 'Keluar dari akun staff?', [
-                { text: 'Batal', style: 'cancel' },
-                {
-                  text: 'Keluar',
-                  style: 'destructive',
-                  onPress: async () => {
-                    await signOut('staff');
-                    router.replace('/login');
-                  },
-                },
-              ])
-            }
+            onPress={async () => {
+              await signOutAll();
+              router.replace('/login');
+            }}
           >
             <Ionicons name="log-out-outline" size={16} color="#FFFFFF" />
             <Text style={styles.logoutText}>Logout</Text>

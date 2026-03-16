@@ -40,11 +40,6 @@ function AuthGate() {
     const targetRole = atMahasiswa ? "mahasiswa" : atStaff ? "staff" : atKepala ? "kepala" : null;
 
     if (!activeSession) {
-      if (targetRole && sessions[targetRole]) {
-        void setActiveRole(targetRole);
-        return;
-      }
-
       if (!atLogin) {
         router.replace("/login");
       }

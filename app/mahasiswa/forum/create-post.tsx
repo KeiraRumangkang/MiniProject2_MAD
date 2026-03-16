@@ -10,12 +10,14 @@ import {
 import { useMutation } from "convex/react";
 import { router } from "expo-router";
 import { api } from "../../../convex/_generated/api";
+import { useAuthSession } from "@/lib/auth-session";
 
 export default function CreatePost() {
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [category, setCategory] = useState("review_buku");
+  const { activeSession } = useAuthSession();
 
   const createPost = useMutation(api.forum.createForumPost);
 
@@ -26,10 +28,16 @@ export default function CreatePost() {
       return;
     }
 
+    if (!activeSession || activeSession.role !== "mahasiswa") {
+      alert("Session mahasiswa tidak ditemukan. Silakan login ulang.");
+      router.replace("/login");
+      return;
+    }
+
     try {
 
       await createPost({
-        userId: "dummy_user_id",
+        userId: activeSession.userId as any,
         title: title,
         content: content,
         category: category,
