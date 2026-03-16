@@ -34,7 +34,14 @@ export default function ProfilKepala() {
   const handleLogout = () => {
     Alert.alert("Konfirmasi Keluar", "Apakah Anda yakin ingin keluar?", [
       { text: "Batal", style: "cancel" },
-      { text: "Keluar", style: "destructive", onPress: () => void signOut('kepala') }
+      {
+        text: "Keluar",
+        style: "destructive",
+        onPress: async () => {
+          await signOut('kepala');
+          router.replace('/login');
+        },
+      }
     ]);
   };
 

@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Dimensions, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from 'convex/react';
+import { useRouter } from 'expo-router';
 import { api } from '../../convex/_generated/api';
 import { StaffErrorState, StaffHeader, StaffLoadingState, cardShadow } from './_shared';
 import { useAuthSession } from '@/lib/auth-session';
@@ -11,6 +12,7 @@ const { width } = Dimensions.get('window');
 export default function StaffDashboard() {
   const stats = useQuery(api.dashboard.getStaffDashboardStats);
   const { signOut } = useAuthSession();
+  const router = useRouter();
 
   if (stats === undefined) {
     return <StaffLoadingState message="Menyiapkan dashboard staff..." />;
@@ -106,7 +108,14 @@ export default function StaffDashboard() {
             onPress={() =>
               Alert.alert('Logout', 'Keluar dari akun staff?', [
                 { text: 'Batal', style: 'cancel' },
-                { text: 'Keluar', style: 'destructive', onPress: () => void signOut('staff') },
+                {
+                  text: 'Keluar',
+                  style: 'destructive',
+                  onPress: async () => {
+                    await signOut('staff');
+                    router.replace('/login');
+                  },
+                },
               ])
             }
           >

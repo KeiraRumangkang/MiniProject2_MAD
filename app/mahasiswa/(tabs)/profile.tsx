@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from 'convex/react';
+import { useRouter } from 'expo-router';
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { api } from '../../../convex/_generated/api';
@@ -7,6 +8,7 @@ import { useAuthSession } from '@/lib/auth-session';
 
 export default function Profile() {
   const { activeSession, signOut } = useAuthSession();
+  const router = useRouter();
   const userId = activeSession?.role === 'mahasiswa' ? (activeSession.userId as any) : undefined;
 
   const profileData = useQuery(
@@ -98,7 +100,14 @@ export default function Profile() {
         onPress={() =>
           Alert.alert('Logout', 'Keluar dari akun mahasiswa?', [
             { text: 'Batal', style: 'cancel' },
-            { text: 'Keluar', style: 'destructive', onPress: () => void signOut('mahasiswa') },
+            {
+              text: 'Keluar',
+              style: 'destructive',
+              onPress: async () => {
+                await signOut('mahasiswa');
+                router.replace('/login');
+              },
+            },
           ])
         }
       >
