@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, FlatList, ActivityIndicator,
+  View, Text, StyleSheet, FlatList,
   TouchableOpacity, Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
+import { StaffErrorState, StaffHeader, StaffLoadingState, cardShadow } from './_shared';
 
 type FilterType = 'all' | 'pinned';
 
@@ -17,12 +18,11 @@ export default function ForumModerasi() {
   const [filter, setFilter] = useState<FilterType>('all');
 
   if (posts === undefined) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#10B981" />
-        <Text style={styles.loadingText}>Memuat Forum...</Text>
-      </View>
-    );
+    return <StaffLoadingState message="Memuat forum moderasi..." />;
+  }
+
+  if (!Array.isArray(posts)) {
+    return <StaffErrorState message="Data forum gagal dimuat. Coba refresh halaman." />;
   }
 
   // Filter out deleted posts, then apply tab filter
@@ -154,10 +154,10 @@ export default function ForumModerasi() {
   return (
     <View style={styles.container}>
       {/* HEADER */}
-      <View style={styles.headerSection}>
-        <Text style={styles.headerTitle}>Moderasi Forum</Text>
-        <Text style={styles.headerSubtitle}>{visiblePosts.length} post aktif</Text>
-      </View>
+      <StaffHeader
+        title="Moderasi Forum"
+        subtitle={`${visiblePosts.length} post aktif`}
+      />
 
       {/* FILTER */}
       <View style={styles.filterContainer}>
@@ -202,13 +202,7 @@ export default function ForumModerasi() {
 }
 
 const styles = StyleSheet.create({
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F5F7FA' },
-  loadingText: { marginTop: 12, color: '#10B981', fontWeight: '600' },
   container: { flex: 1, backgroundColor: '#F5F7FA' },
-
-  headerSection: { paddingHorizontal: 24, paddingTop: 60, paddingBottom: 16 },
-  headerTitle: { fontSize: 26, fontWeight: 'bold', color: '#1A1A1A' },
-  headerSubtitle: { fontSize: 14, color: '#757575', marginTop: 4 },
 
   filterContainer: {
     flexDirection: 'row', paddingHorizontal: 20, marginBottom: 16,
@@ -226,7 +220,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16,
     marginBottom: 12,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.02, shadowRadius: 8, elevation: 1,
+    ...cardShadow,
   },
   pinnedBanner: {
     flexDirection: 'row', alignItems: 'center',

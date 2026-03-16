@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
+import { StaffErrorState, StaffHeader, StaffLoadingState, cardShadow } from './_shared';
 
 const { width } = Dimensions.get('window');
 
@@ -10,11 +11,12 @@ export default function StaffDashboard() {
   const stats = useQuery(api.dashboard.getStaffDashboardStats);
 
   if (stats === undefined) {
+    return <StaffLoadingState message="Menyiapkan dashboard staff..." />;
+  }
+
+  if (!stats) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#10B981" />
-        <Text style={styles.loadingText}>Menyiapkan Dashboard...</Text>
-      </View>
+      <StaffErrorState message="Data dashboard tidak tersedia. Refresh halaman untuk mencoba lagi." />
     );
   }
 
@@ -54,10 +56,10 @@ export default function StaffDashboard() {
       <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
 
         {/* GREEN HEADER */}
-        <View style={styles.headerSection}>
-          <Text style={styles.greetingText}>Staff Dashboard 👋</Text>
-          <Text style={styles.subtitleText}>Kelola operasional perpustakaan</Text>
-        </View>
+        <StaffHeader
+          title="Staff Dashboard"
+          subtitle="Kelola operasional perpustakaan"
+        />
 
         {/* STAT CARDS */}
         <View style={styles.bodySection}>
@@ -105,26 +107,12 @@ export default function StaffDashboard() {
 }
 
 const styles = StyleSheet.create({
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F5F7FA' },
-  loadingText: { marginTop: 12, color: '#10B981', fontWeight: '600' },
   container: { flex: 1, backgroundColor: '#F5F7FA' },
-
-  headerSection: {
-    backgroundColor: '#10B981',
-    paddingTop: 60,
-    paddingHorizontal: 24,
-    paddingBottom: 70,
-  },
-  greetingText: { color: '#FFFFFF', fontSize: 24, fontWeight: 'bold', marginBottom: 4 },
-  subtitleText: { color: 'rgba(255,255,255,0.8)', fontSize: 14, fontWeight: '500' },
 
   bodySection: {
     backgroundColor: '#F5F7FA',
-    marginTop: -30,
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
     paddingHorizontal: 20,
-    paddingTop: 30,
+    paddingTop: 8,
   },
 
   cardsGrid: {
@@ -139,11 +127,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 18,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
+    ...cardShadow,
   },
   iconContainer: {
     width: 48,
@@ -160,11 +144,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
+    ...cardShadow,
   },
   infoHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
   infoTitle: { fontSize: 16, fontWeight: '700', color: '#333', marginLeft: 8 },

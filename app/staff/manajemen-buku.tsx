@@ -1,11 +1,19 @@
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, ActivityIndicator,
+  View, Text, StyleSheet, ScrollView,
   TextInput, TouchableOpacity, Alert, Modal, FlatList,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
+import {
+  StaffErrorState,
+  StaffHeader,
+  StaffLoadingState,
+  cardShadow,
+  softShadow,
+  strongShadow,
+} from './_shared';
 
 export default function ManajemenBuku() {
   const books = useQuery(api.books.getAllBooks);
@@ -27,12 +35,11 @@ export default function ManajemenBuku() {
   const [formCategoryId, setFormCategoryId] = useState('');
 
   if (books === undefined || categories === undefined) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#10B981" />
-        <Text style={styles.loadingText}>Memuat Data Buku...</Text>
-      </View>
-    );
+    return <StaffLoadingState message="Memuat data buku..." />;
+  }
+
+  if (!Array.isArray(books) || !Array.isArray(categories)) {
+    return <StaffErrorState message="Data buku gagal dimuat. Coba refresh halaman." />;
   }
 
   const filteredBooks = books.filter((book) => {
@@ -155,10 +162,10 @@ export default function ManajemenBuku() {
   return (
     <View style={styles.container}>
       {/* HEADER */}
-      <View style={styles.headerSection}>
-        <Text style={styles.headerTitle}>Manajemen Buku</Text>
-        <Text style={styles.headerSubtitle}>{books.length} buku dalam koleksi</Text>
-      </View>
+      <StaffHeader
+        title="Manajemen Buku"
+        subtitle={`${books.length} buku dalam koleksi`}
+      />
 
       <View style={styles.bodySection}>
         {/* SEARCH + ADD */}
@@ -299,13 +306,7 @@ export default function ManajemenBuku() {
 }
 
 const styles = StyleSheet.create({
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F5F7FA' },
-  loadingText: { marginTop: 12, color: '#10B981', fontWeight: '600' },
   container: { flex: 1, backgroundColor: '#F5F7FA' },
-
-  headerSection: { paddingHorizontal: 24, paddingTop: 60, paddingBottom: 20 },
-  headerTitle: { fontSize: 26, fontWeight: 'bold', color: '#1A1A1A' },
-  headerSubtitle: { fontSize: 14, color: '#757575', marginTop: 4 },
 
   bodySection: { flex: 1, paddingHorizontal: 20 },
 
@@ -313,19 +314,19 @@ const styles = StyleSheet.create({
   searchContainer: {
     flex: 1, flexDirection: 'row', alignItems: 'center',
     backgroundColor: '#FFFFFF', borderRadius: 14, paddingHorizontal: 14, height: 48,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.03, shadowRadius: 8, elevation: 2,
+    ...softShadow,
   },
   searchInput: { flex: 1, fontSize: 15, color: '#333' },
   addButton: {
     width: 48, height: 48, borderRadius: 14, backgroundColor: '#10B981',
     justifyContent: 'center', alignItems: 'center', marginLeft: 10,
-    shadowColor: '#10B981', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4,
+    ...strongShadow,
   },
 
   bookCard: {
     backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16,
     marginBottom: 10, flexDirection: 'row', alignItems: 'center',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.02, shadowRadius: 8, elevation: 1,
+    ...cardShadow,
   },
   bookCover: {
     width: 52, height: 52, borderRadius: 14, backgroundColor: '#ECFDF5',
@@ -374,7 +375,7 @@ const styles = StyleSheet.create({
   saveButton: {
     backgroundColor: '#10B981', borderRadius: 14, padding: 16,
     alignItems: 'center', marginTop: 8,
-    shadowColor: '#10B981', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4,
+    ...strongShadow,
   },
   saveButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: 'bold' },
 });

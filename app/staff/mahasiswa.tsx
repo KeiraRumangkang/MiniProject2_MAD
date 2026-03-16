@@ -2,8 +2,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery } from 'convex/react';
 import { useRouter } from 'expo-router'; // import router untuk navigasi
 import React, { useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View, } from 'react-native';
+import { Alert, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View, } from 'react-native';
 import { api } from '../../convex/_generated/api';
+import { StaffErrorState, StaffHeader, StaffLoadingState, cardShadow, softShadow } from './_shared';
 
 export default function ManajemenMahasiswa() {
   const router = useRouter(); // inisialisasi router
@@ -12,11 +13,12 @@ export default function ManajemenMahasiswa() {
   const [search, setSearch] = useState('');
 
   if (users === undefined) {
+    return <StaffLoadingState message="Memuat data mahasiswa..." />;
+  }
+
+  if (!Array.isArray(users)) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#10B981" />
-        <Text style={styles.loadingText}>Memuat Data Mahasiswa...</Text>
-      </View>
+      <StaffErrorState message="Data mahasiswa gagal dimuat. Coba refresh halaman." />
     );
   }
 
@@ -95,10 +97,10 @@ export default function ManajemenMahasiswa() {
   return (
     <View style={styles.container}>
       {/* HEADER */}
-      <View style={styles.headerSection}>
-        <Text style={styles.headerTitle}>Kelola Mahasiswa</Text>
-        <Text style={styles.headerSubtitle}>{users.length} total mahasiswa</Text>
-      </View>
+      <StaffHeader
+        title="Kelola Mahasiswa"
+        subtitle={`${users.length} total mahasiswa`}
+      />
 
       {/* SUMMARY BADGES */}
       <View style={styles.summaryRow}>
@@ -169,18 +171,13 @@ export default function ManajemenMahasiswa() {
 }
 
 const styles = StyleSheet.create({
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F5F7FA' },
-  loadingText: { marginTop: 12, color: '#10B981', fontWeight: '600' },
   container: { flex: 1, backgroundColor: '#F5F7FA' },
-  headerSection: { paddingHorizontal: 24, paddingTop: 60, paddingBottom: 12 },
-  headerTitle: { fontSize: 26, fontWeight: 'bold', color: '#1A1A1A' },
-  headerSubtitle: { fontSize: 14, color: '#757575', marginTop: 4 },
   summaryRow: { flexDirection: 'row', paddingHorizontal: 20, marginBottom: 16 },
   summaryBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 12, marginRight: 10 },
   summaryText: { fontSize: 13, fontWeight: '700', marginLeft: 6 },
-  searchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF', marginHorizontal: 20, borderRadius: 14, paddingHorizontal: 14, height: 48, marginBottom: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.03, shadowRadius: 8, elevation: 2 },
+  searchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF', marginHorizontal: 20, borderRadius: 14, paddingHorizontal: 14, height: 48, marginBottom: 16, ...softShadow },
   searchInput: { flex: 1, fontSize: 15, color: '#333' },
-  card: { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, marginBottom: 10, flexDirection: 'row', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.02, shadowRadius: 8, elevation: 1 },
+  card: { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, marginBottom: 10, flexDirection: 'row', alignItems: 'center', ...cardShadow },
   cardLeft: { marginRight: 12 },
   avatar: { width: 46, height: 46, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
   cardCenter: { flex: 1, paddingRight: 8 },
