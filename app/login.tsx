@@ -3,19 +3,21 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { api } from "../convex/_generated/api";
+import { getHomePathByRole, useAuthSession } from "@/lib/auth-session";
 
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("");
   const [loading, setLoading] = useState(false);
+  const { signIn, sessions, setActiveRole } = useAuthSession();
 
   // Kita gunakan query untuk mencari user berdasarkan input username
   // Note: Dalam aplikasi produksi, sebaiknya gunakan Action/Mutation untuk login 
   // agar lebih aman, tapi untuk tahap ini kita gunakan data dari query.
   const userData = useQuery(api.users.getUserByUsername, { username: username.toLowerCase().trim() });
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!username || !password || !role) {
       return Alert.alert("Error", "Mohon isi semua field dan pilih role.");
     }
@@ -23,7 +25,7 @@ export default function Login() {
     setLoading(true);
 
     // Simulasi loading sebentar agar UX lebih bagus
-    setTimeout(() => {
+    setTimeout(async () => {
       if (!userData) {
         setLoading(false);
         return Alert.alert("Gagal", "Username tidak ditemukan.");
@@ -47,13 +49,19 @@ export default function Login() {
         return Alert.alert("Gagal", "Akun Anda dinonaktifkan oleh admin.");
       }
 
-      // Jika semua oke, arahkan ke dashboard masing-masing
+      await signIn({
+        userId: userData._id,
+        username: userData.username,
+        role: userData.role,
+        name: userData.name,
+      });
+
       setLoading(false);
-      if (role === "mahasiswa") router.replace("/mahasiswa/(tabs)");
-      if (role === "staff") router.replace("/staff");
-      if (role === "kepala") router.replace("/kepala");
+      router.replace(getHomePathByRole(userData.role));
     }, 800);
   };
+
+  const quickLoginRoles = (["mahasiswa", "staff", "kepala"] as const).filter((r) => !!sessions[r]);
 
   return (
     <View style={styles.container}>
@@ -104,11 +112,31 @@ export default function Login() {
 
       <TouchableOpacity 
         style={[styles.loginButton, loading && { backgroundColor: '#A5C9F7' }]} 
-        onPress={handleLogin}
+        onPress={() => void handleLogin()}
         disabled={loading}
       >
         {loading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.loginText}>Masuk Ke Sistem</Text>}
       </TouchableOpacity>
+
+      {quickLoginRoles.length > 0 && (
+        <View style={styles.quickContainer}>
+          <Text style={styles.quickTitle}>Session tersimpan:</Text>
+          <View style={styles.quickButtons}>
+            {quickLoginRoles.map((savedRole) => (
+              <TouchableOpacity
+                key={savedRole}
+                style={styles.quickButton}
+                onPress={async () => {
+                  await setActiveRole(savedRole);
+                  router.replace(getHomePathByRole(savedRole));
+                }}
+              >
+                <Text style={styles.quickText}>{savedRole.toUpperCase()}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -126,4 +154,9 @@ const styles = StyleSheet.create({
   roleText: { color: "white", fontWeight: "bold", fontSize: 12 },
   loginButton: { backgroundColor: "#2F80ED", padding: 18, borderRadius: 12, alignItems: "center", elevation: 4, shadowColor: '#2F80ED', shadowOpacity: 0.3, shadowRadius: 8 },
   loginText: { color: "white", fontSize: 16, fontWeight: "bold" },
+  quickContainer: { marginTop: 18 },
+  quickTitle: { textAlign: "center", color: "#64748B", fontWeight: "600", marginBottom: 8 },
+  quickButtons: { flexDirection: "row", justifyContent: "center", gap: 8 },
+  quickButton: { backgroundColor: "#E2E8F0", paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
+  quickText: { fontSize: 11, fontWeight: "800", color: "#334155" },
 });

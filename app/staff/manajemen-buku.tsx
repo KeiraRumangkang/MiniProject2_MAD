@@ -25,6 +25,11 @@ export default function ManajemenBuku() {
   const [search, setSearch] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [editingBook, setEditingBook] = useState<any>(null);
+  const [selectedCategory, setSelectedCategory] = useState<'all' | string>('all');
+  const [selectedStatus, setSelectedStatus] = useState<'all' | 'available' | 'limited' | 'unavailable'>('all');
+  const [sortBy, setSortBy] = useState<'newest' | 'title' | 'mostBorrowed' | 'stockAsc'>('newest');
+  const [isSaving, setIsSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Form state
   const [formTitle, setFormTitle] = useState('');
@@ -42,13 +47,22 @@ export default function ManajemenBuku() {
     return <StaffErrorState message="Data buku gagal dimuat. Coba refresh halaman." />;
   }
 
-  const filteredBooks = books.filter((book) => {
-    const keyword = search.toLowerCase();
-    return (
-      book.title.toLowerCase().includes(keyword) ||
-      book.author.toLowerCase().includes(keyword)
-    );
-  });
+  const filteredBooks = books
+    .filter((book) => {
+      const keyword = search.toLowerCase();
+      const matchesKeyword =
+        book.title.toLowerCase().includes(keyword) ||
+        book.author.toLowerCase().includes(keyword);
+      const matchesCategory = selectedCategory === 'all' || book.categoryId === selectedCategory;
+      const matchesStatus = selectedStatus === 'all' || book.status === selectedStatus;
+      return matchesKeyword && matchesCategory && matchesStatus;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'title') return a.title.localeCompare(b.title);
+      if (sortBy === 'mostBorrowed') return b.totalBorrowed - a.totalBorrowed;
+      if (sortBy === 'stockAsc') return a.stockAvailable - b.stockAvailable;
+      return b.createdAt - a.createdAt;
+    });
 
   const resetForm = () => {
     setFormTitle('');
@@ -84,7 +98,15 @@ export default function ManajemenBuku() {
       return Alert.alert('Error', 'Mohon isi semua field');
     }
 
+    const parsedYear = parseInt(formYear, 10);
+    const parsedStock = parseInt(formStock, 10);
+
+    if (!Number.isFinite(parsedYear) || !Number.isFinite(parsedStock) || parsedStock < 0) {
+      return Alert.alert('Error', 'Tahun dan stok harus berupa angka valid.');
+    }
+
     try {
+      setIsSaving(true);
       if (editingBook) {
         await updateBook({
           bookId: editingBook._id,
@@ -92,8 +114,8 @@ export default function ManajemenBuku() {
           author: formAuthor,
           synopsis: formSynopsis,
           categoryId: formCategoryId as any,
-          year: parseInt(formYear),
-          stockTotal: parseInt(formStock),
+          year: parsedYear,
+          stockTotal: parsedStock,
         });
         Alert.alert('Berhasil', 'Buku berhasil diperbarui');
       } else {
@@ -102,8 +124,8 @@ export default function ManajemenBuku() {
           author: formAuthor,
           synopsis: formSynopsis,
           categoryId: formCategoryId as any,
-          year: parseInt(formYear),
-          stockTotal: parseInt(formStock),
+          year: parsedYear,
+          stockTotal: parsedStock,
         });
         Alert.alert('Berhasil', 'Buku berhasil ditambahkan');
       }
@@ -111,6 +133,8 @@ export default function ManajemenBuku() {
       resetForm();
     } catch (error: any) {
       Alert.alert('Error', error.message || 'Gagal menyimpan buku');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -125,10 +149,13 @@ export default function ManajemenBuku() {
           style: 'destructive',
           onPress: async () => {
             try {
+              setDeletingId(bookId);
               await deleteBook({ bookId });
               Alert.alert('Berhasil', 'Buku berhasil dihapus');
             } catch (error: any) {
               Alert.alert('Error', error.message || 'Gagal menghapus buku');
+            } finally {
+              setDeletingId(null);
             }
           },
         },
@@ -185,6 +212,59 @@ export default function ManajemenBuku() {
           </TouchableOpacity>
         </View>
 
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
+          <TouchableOpacity
+            style={[styles.filterChip, selectedCategory === 'all' && styles.filterChipActive]}
+            onPress={() => setSelectedCategory('all')}
+          >
+            <Text style={[styles.filterChipText, selectedCategory === 'all' && styles.filterChipTextActive]}>Semua Kategori</Text>
+          </TouchableOpacity>
+          {categories.map((cat) => (
+            <TouchableOpacity
+              key={cat._id}
+              style={[styles.filterChip, selectedCategory === cat._id && styles.filterChipActive]}
+              onPress={() => setSelectedCategory(cat._id)}
+            >
+              <Text style={[styles.filterChipText, selectedCategory === cat._id && styles.filterChipTextActive]}>{cat.name}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        <View style={styles.sortRow}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {[
+              { key: 'all', label: 'Semua Status' },
+              { key: 'available', label: 'Tersedia' },
+              { key: 'limited', label: 'Terbatas' },
+              { key: 'unavailable', label: 'Habis' },
+            ].map((status) => (
+              <TouchableOpacity
+                key={status.key}
+                style={[styles.sortChip, selectedStatus === status.key && styles.sortChipActive]}
+                onPress={() => setSelectedStatus(status.key as any)}
+              >
+                <Text style={[styles.sortChipText, selectedStatus === status.key && styles.sortChipTextActive]}>{status.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {[
+              { key: 'newest', label: 'Terbaru' },
+              { key: 'title', label: 'A-Z' },
+              { key: 'mostBorrowed', label: 'Terpopuler' },
+              { key: 'stockAsc', label: 'Stok Minim' },
+            ].map((sortOption) => (
+              <TouchableOpacity
+                key={sortOption.key}
+                style={[styles.sortChip, sortBy === sortOption.key && styles.sortChipActive]}
+                onPress={() => setSortBy(sortOption.key as any)}
+              >
+                <Text style={[styles.sortChipText, sortBy === sortOption.key && styles.sortChipTextActive]}>{sortOption.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
         {/* BOOK LIST */}
         <FlatList
           data={filteredBooks}
@@ -219,7 +299,7 @@ export default function ManajemenBuku() {
                   <TouchableOpacity style={styles.editBtn} onPress={() => openEditModal(item)}>
                     <Ionicons name="create-outline" size={18} color="#3B82F6" />
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.deleteBtn} onPress={() => handleDelete(item._id)}>
+                  <TouchableOpacity style={styles.deleteBtn} onPress={() => handleDelete(item._id)} disabled={deletingId === item._id}>
                     <Ionicons name="trash-outline" size={18} color="#EF4444" />
                   </TouchableOpacity>
                 </View>
@@ -290,9 +370,9 @@ export default function ManajemenBuku() {
                 </View>
               </View>
 
-              <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+              <TouchableOpacity style={[styles.saveButton, isSaving && styles.disabledSaveButton]} onPress={handleSave} disabled={isSaving}>
                 <Text style={styles.saveButtonText}>
-                  {editingBook ? 'Simpan Perubahan' : 'Tambah Buku'}
+                  {isSaving ? 'Menyimpan...' : editingBook ? 'Simpan Perubahan' : 'Tambah Buku'}
                 </Text>
               </TouchableOpacity>
 
@@ -311,6 +391,38 @@ const styles = StyleSheet.create({
   bodySection: { flex: 1, paddingHorizontal: 20 },
 
   actionRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
+  filterRow: { marginBottom: 10 },
+  filterChip: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    marginRight: 8,
+  },
+  filterChipActive: {
+    backgroundColor: '#ECFDF5',
+    borderColor: '#10B981',
+  },
+  filterChipText: { color: '#6B7280', fontSize: 12, fontWeight: '600' },
+  filterChipTextActive: { color: '#10B981' },
+  sortRow: { gap: 8, marginBottom: 14 },
+  sortChip: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginRight: 8,
+  },
+  sortChipActive: {
+    borderColor: '#10B981',
+    backgroundColor: '#ECFDF5',
+  },
+  sortChipText: { fontSize: 11, color: '#6B7280', fontWeight: '700' },
+  sortChipTextActive: { color: '#10B981' },
   searchContainer: {
     flex: 1, flexDirection: 'row', alignItems: 'center',
     backgroundColor: '#FFFFFF', borderRadius: 14, paddingHorizontal: 14, height: 48,
@@ -377,5 +489,6 @@ const styles = StyleSheet.create({
     alignItems: 'center', marginTop: 8,
     ...strongShadow,
   },
+  disabledSaveButton: { opacity: 0.75 },
   saveButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: 'bold' },
 });

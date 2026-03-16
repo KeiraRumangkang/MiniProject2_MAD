@@ -23,6 +23,7 @@ import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native
 
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
+import { useAuthSession } from "@/lib/auth-session";
 
 // tipe buat tab switcher
 type Tab = "active" | "history";
@@ -32,9 +33,8 @@ export default function Pinjaman() {
   // state tab yang lagi aktif
   const [tab, setTab] = useState<Tab>("active");
 
-  // sementara pake user pertama, nanti ganti pake auth session
-  const users = useQuery(api.users.getMahasiswaList);
-  const userId = users?.[0]?._id;
+  const { activeSession } = useAuthSession();
+  const userId = activeSession?.role === "mahasiswa" ? (activeSession.userId as any) : undefined;
 
   // ambil data peminjaman yang udah di-enrich sama judul buku
   // pake "skip" kalo userId belum ready (conditional query)

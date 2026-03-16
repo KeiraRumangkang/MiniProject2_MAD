@@ -4,10 +4,12 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { api } from '../../convex/_generated/api';
+import { useAuthSession } from '@/lib/auth-session';
 
 export default function ProfilKepala() {
   const router = useRouter();
   const [isNotifEnabled, setIsNotifEnabled] = useState(true);
+  const { signOut } = useAuthSession();
   
   // Ambil data asli dari database Convex
   const userProfile = useQuery(api.dashboard.getCurrentKepalaProfile);
@@ -32,7 +34,7 @@ export default function ProfilKepala() {
   const handleLogout = () => {
     Alert.alert("Konfirmasi Keluar", "Apakah Anda yakin ingin keluar?", [
       { text: "Batal", style: "cancel" },
-      { text: "Keluar", style: "destructive", onPress: () => router.replace("/") }
+      { text: "Keluar", style: "destructive", onPress: () => void signOut('kepala') }
     ]);
   };
 

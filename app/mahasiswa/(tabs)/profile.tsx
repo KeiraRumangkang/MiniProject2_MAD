@@ -1,19 +1,20 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from 'convex/react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { api } from '../../../convex/_generated/api';
+import { useAuthSession } from '@/lib/auth-session';
 
 export default function Profile() {
-  const users = useQuery(api.users.getMahasiswaList);
-  const userId = users?.[0]?._id;
+  const { activeSession, signOut } = useAuthSession();
+  const userId = activeSession?.role === 'mahasiswa' ? (activeSession.userId as any) : undefined;
 
   const profileData = useQuery(
     api.users.getMahasiswaProfile,
     userId ? { userId } : 'skip'
   );
 
-  if (users === undefined || profileData === undefined) {
+  if (profileData === undefined) {
     return (
       <View style={[styles.container, styles.center]}>
         <Text style={styles.loadingText}>Memuat profil...</Text>
@@ -91,6 +92,19 @@ export default function Profile() {
           )}
         </View>
       </View>
+
+      <TouchableOpacity
+        style={styles.logoutButton}
+        onPress={() =>
+          Alert.alert('Logout', 'Keluar dari akun mahasiswa?', [
+            { text: 'Batal', style: 'cancel' },
+            { text: 'Keluar', style: 'destructive', onPress: () => void signOut('mahasiswa') },
+          ])
+        }
+      >
+        <Ionicons name="log-out-outline" size={16} color="#FFFFFF" />
+        <Text style={styles.logoutText}>Logout</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -241,5 +255,20 @@ const styles = StyleSheet.create({
     color: '#475569',
     textAlign: 'center',
     lineHeight: 20,
+  },
+  logoutButton: {
+    marginTop: 22,
+    backgroundColor: '#EF4444',
+    borderRadius: 12,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  logoutText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 14,
   },
 });

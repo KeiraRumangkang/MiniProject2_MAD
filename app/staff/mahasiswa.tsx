@@ -1,15 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery } from 'convex/react';
-import { useRouter } from 'expo-router'; // import router untuk navigasi
 import React, { useState } from 'react';
 import { Alert, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View, } from 'react-native';
 import { api } from '../../convex/_generated/api';
 import { StaffErrorState, StaffHeader, StaffLoadingState, cardShadow, softShadow } from './_shared';
+import { useAuthSession } from '@/lib/auth-session';
 
 export default function ManajemenMahasiswa() {
-  const router = useRouter(); // inisialisasi router
   const users = useQuery(api.users.getMahasiswaList);
   const suspendUser = useMutation(api.users.suspendUser);
+  const { signOut } = useAuthSession();
   const [search, setSearch] = useState('');
 
   if (users === undefined) {
@@ -154,10 +154,7 @@ export default function ManajemenMahasiswa() {
               {
                 text: 'Logout',
                 style: 'destructive',
-                onPress: () => {
-                  // TODO: hapus session/token jika perlu
-                  router.replace('/login'); // pindah ke halaman login
-                },
+                onPress: () => void signOut('staff'),
               },
             ]
           );

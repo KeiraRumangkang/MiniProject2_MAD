@@ -7,17 +7,19 @@ import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { StaffErrorState, StaffHeader, StaffLoadingState, cardShadow, softShadow } from './_shared';
+import { useAuthSession } from '@/lib/auth-session';
 
 type TabType = 'requested' | 'borrowed' | 'late';
 
 export default function PeminjamanStaff() {
   const borrowings = useQuery(api.borrowings.getAllBorrowings);
-  const staffUsers = useQuery(api.dashboard.getAllStaff);
   const verifyBorrowing = useMutation(api.borrowings.verifyBorrowing);
   const returnBook = useMutation(api.borrowings.returnBook);
   const rejectBorrowing = useMutation(api.borrowings.rejectBorrowing);
+  const { activeSession } = useAuthSession();
 
   const [activeTab, setActiveTab] = useState<TabType>('requested');
+  const [processingAction, setProcessingAction] = useState<{ id: string; type: 'approve' | 'reject' | 'return' } | null>(null);
 
   if (borrowings === undefined) {
     return <StaffLoadingState message="Memuat data peminjaman..." />;
@@ -27,8 +29,7 @@ export default function PeminjamanStaff() {
     return <StaffErrorState message="Data peminjaman gagal dimuat. Coba refresh halaman." />;
   }
 
-  // Sementara ambil staff pertama dari database sampai auth/session diterapkan.
-  const staffId = staffUsers?.[0]?._id;
+  const staffId = activeSession?.role === 'staff' ? activeSession.userId : null;
 
   const filteredBorrowings = borrowings.filter((b) => {
     if (activeTab === 'requested') return b.effectiveStatus === 'requested';
@@ -73,6 +74,7 @@ export default function PeminjamanStaff() {
           text: 'Setujui',
           onPress: async () => {
             try {
+              setProcessingAction({ id: borrowingId, type: 'approve' });
               await verifyBorrowing({
                 borrowingId: borrowingId as any,
                 staffId: staffId as any,
@@ -80,6 +82,8 @@ export default function PeminjamanStaff() {
               Alert.alert('Berhasil', 'Peminjaman disetujui');
             } catch (error: any) {
               Alert.alert('Error', error.message || 'Gagal menyetujui');
+            } finally {
+              setProcessingAction(null);
             }
           },
         },
@@ -103,6 +107,7 @@ export default function PeminjamanStaff() {
           style: 'destructive',
           onPress: async () => {
             try {
+              setProcessingAction({ id: borrowingId, type: 'reject' });
               await rejectBorrowing({
                 borrowingId: borrowingId as any,
                 staffId: staffId as any,
@@ -110,6 +115,8 @@ export default function PeminjamanStaff() {
               Alert.alert('Berhasil', 'Peminjaman ditolak');
             } catch (error: any) {
               Alert.alert('Error', error.message || 'Gagal menolak');
+            } finally {
+              setProcessingAction(null);
             }
           },
         },
@@ -132,6 +139,7 @@ export default function PeminjamanStaff() {
           text: 'Konfirmasi',
           onPress: async () => {
             try {
+              setProcessingAction({ id: borrowingId, type: 'return' });
               await returnBook({
                 borrowingId: borrowingId as any,
                 staffId: staffId as any,
@@ -139,6 +147,8 @@ export default function PeminjamanStaff() {
               Alert.alert('Berhasil', 'Pengembalian berhasil diverifikasi');
             } catch (error: any) {
               Alert.alert('Error', error.message || 'Gagal memverifikasi');
+            } finally {
+              setProcessingAction(null);
             }
           },
         },
@@ -153,6 +163,12 @@ export default function PeminjamanStaff() {
 
   const renderItem = ({ item }: { item: any }) => (
     <View style={styles.card}>
+      {processingAction?.id === item._id && (
+        <View style={styles.processingBadge}>
+          <Ionicons name="sync" size={12} color="#1D4ED8" />
+          <Text style={styles.processingText}>Memproses...</Text>
+        </View>
+      )}
       <View style={styles.cardLeft}>
         <View style={[
           styles.cardIcon,
@@ -187,16 +203,28 @@ export default function PeminjamanStaff() {
       <View style={styles.cardRight}>
         {activeTab === 'requested' && (
           <>
-            <TouchableOpacity style={styles.approveBtn} onPress={() => handleApprove(item._id)}>
+            <TouchableOpacity
+              style={[styles.approveBtn, processingAction?.id === item._id && styles.disabledButton]}
+              onPress={() => handleApprove(item._id)}
+              disabled={!!processingAction || !staffId}
+            >
               <Ionicons name="checkmark" size={18} color="#FFFFFF" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.rejectBtn} onPress={() => handleReject(item._id)}>
+            <TouchableOpacity
+              style={[styles.rejectBtn, processingAction?.id === item._id && styles.disabledButton]}
+              onPress={() => handleReject(item._id)}
+              disabled={!!processingAction || !staffId}
+            >
               <Ionicons name="close" size={18} color="#FFFFFF" />
             </TouchableOpacity>
           </>
         )}
         {(activeTab === 'borrowed' || activeTab === 'late') && (
-          <TouchableOpacity style={styles.returnBtn} onPress={() => handleReturn(item._id)}>
+          <TouchableOpacity
+            style={[styles.returnBtn, processingAction?.id === item._id && styles.disabledButton]}
+            onPress={() => handleReturn(item._id)}
+            disabled={!!processingAction || !staffId}
+          >
             <Ionicons name="return-down-back" size={16} color="#FFFFFF" />
             <Text style={styles.returnBtnText}>Kembali</Text>
           </TouchableOpacity>
@@ -298,6 +326,24 @@ const styles = StyleSheet.create({
     marginBottom: 10, flexDirection: 'row', alignItems: 'center',
     ...cardShadow,
   },
+  processingBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#DBEAFE',
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    zIndex: 2,
+  },
+  processingText: {
+    marginLeft: 4,
+    color: '#1D4ED8',
+    fontSize: 10,
+    fontWeight: '700',
+  },
   cardLeft: { marginRight: 12 },
   cardIcon: {
     width: 46, height: 46, borderRadius: 14, justifyContent: 'center', alignItems: 'center',
@@ -323,6 +369,9 @@ const styles = StyleSheet.create({
   returnBtn: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: '#3B82F6', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8,
+  },
+  disabledButton: {
+    opacity: 0.6,
   },
   returnBtnText: { color: '#FFFFFF', fontSize: 12, fontWeight: '600', marginLeft: 4 },
 
