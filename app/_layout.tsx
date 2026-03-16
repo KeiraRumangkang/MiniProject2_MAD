@@ -12,7 +12,10 @@ export default function Layout() {
     <ConvexProvider client={convex}>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="login" />
-        <Stack.Screen name="mahasiswa" />
+        <Stack.Screen name="mahasiswa/(tabs)" />
+        <Stack.Screen name="mahasiswa/book/[id]" />
+        <Stack.Screen name="mahasiswa/forum/[id]" />
+        <Stack.Screen name="mahasiswa/forum/create-post" />
         <Stack.Screen name="staff" />
         <Stack.Screen name="kepala" />
       </Stack>

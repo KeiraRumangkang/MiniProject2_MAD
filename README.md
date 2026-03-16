@@ -1,50 +1,142 @@
-# Welcome to your Expo app 👋
+# MiniProject2 MAD
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Aplikasi perpustakaan berbasis Expo Router (frontend) + Convex (backend).
 
-## Get started
+Repository ini memiliki 3 area utama aplikasi:
+- Mahasiswa
+- Staff
+- Kepala Perpustakaan
 
-1. Install dependencies
+Jika fokus pengembangan kamu hanya Staff, kerjakan file di folder app/staff.
 
-   ```bash
+## Tech Stack
+
+- Expo SDK 54
+- React Native + Expo Router
+- Convex untuk database, query, dan mutation backend
+
+## Struktur Penting
+
+- app/_layout.tsx: layout root dan inisialisasi Convex client
+- app/login.tsx: halaman login
+- app/staff: seluruh halaman Staff
+- convex: fungsi backend (query/mutation/action)
+
+## Prasyarat
+
+- Node.js 18 atau lebih baru
+- npm
+- Akun Convex (untuk menjalankan backend dev)
+
+## Instalasi
+
+1. Masuk ke folder project:
+
+   cd '/Users/gmeruntu_/David/JOKI 1/perpusmadev/MiniProject2_MAD'
+
+2. Install dependency:
+
    npm install
-   ```
 
-2. Start the app
+## Menjalankan Backend dan Frontend Secara Terpisah
 
-   ```bash
-   npx expo start
-   ```
+Penting: backend harus jalan dulu sebelum frontend agar EXPO_PUBLIC_CONVEX_URL valid.
 
-In the output, you'll find options to open the app in a
+### Terminal 1 - Backend Convex
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+1. Masuk ke root project:
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+   cd '/Users/gmeruntu_/David/JOKI 1/perpusmadev/MiniProject2_MAD'
 
-## Get a fresh project
+2. Jalankan backend:
 
-When you're ready, run:
+   npx convex dev
 
-```bash
-npm run reset-project
-```
+3. Jika diminta login, selesaikan proses login Convex di browser.
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+4. Tunggu sampai muncul pesan:
 
-## Learn more
+   Convex functions ready!
 
-To learn more about developing your project with Expo, look at the following resources:
+5. Pastikan file .env.local berisi EXPO_PUBLIC_CONVEX_URL.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Contoh isi .env.local:
 
-## Join the community
+EXPO_PUBLIC_CONVEX_URL=https://nama-deployment.convex.cloud
+CONVEX_DEPLOYMENT=dev:nama-deployment
+EXPO_PUBLIC_CONVEX_SITE_URL=https://nama-deployment.convex.site
 
-Join our community of developers creating universal apps.
+### Terminal 2 - Frontend Expo
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+1. Masuk ke root project:
+
+   cd '/Users/gmeruntu_/David/JOKI 1/perpusmadev/MiniProject2_MAD'
+
+2. Jalankan frontend web:
+
+   npm run web
+
+3. Buka browser:
+
+   http://localhost:8081
+
+Untuk Android:
+
+   npm run android
+
+## Script yang Dipakai
+
+- npm run start: jalankan Expo dev server umum
+- npm run web: jalankan frontend web
+- npm run android: jalankan frontend Android
+- npm run ios: jalankan frontend iOS
+- npm run lint: lint project
+
+## Fokus Pengembangan Staff
+
+Gunakan area berikut:
+- app/staff/index.tsx
+- app/staff/manajemen-buku.tsx
+- app/staff/peminjaman.tsx
+- app/staff/mahasiswa.tsx
+- app/staff/forum.tsx
+- app/staff/_layout.tsx
+
+Disarankan tidak mengubah area mahasiswa/kepala jika scope tugas hanya Staff.
+
+## Troubleshooting
+
+1) Error: No address provided to ConvexReactClient
+
+Penyebab:
+- Backend Convex belum berjalan
+- .env.local belum ada atau EXPO_PUBLIC_CONVEX_URL kosong
+
+Solusi:
+- Jalankan npx convex dev
+- Pastikan .env.local berisi EXPO_PUBLIC_CONVEX_URL
+- Restart frontend npm run web
+
+2) Error: Could not find public function for 'dashboard:getUserByUsername'
+
+Penyebab:
+- Fungsi backend belum tersinkron ke deployment dev
+
+Solusi:
+- Jalankan npx convex dev dari root project
+- Tunggu Convex functions ready
+- Refresh aplikasi
+
+3) Frontend tidak terbuka di web
+
+Solusi cek cepat:
+- Pastikan npm run web sedang aktif
+- Cek port 8081 aktif:
+
+  lsof -nP -iTCP:8081 -sTCP:LISTEN
+
+## Catatan Operasional
+
+- Jalankan backend dan frontend di terminal terpisah.
+- Jangan tutup terminal backend saat frontend dipakai.
+- Jika ganti deployment Convex, update .env.local lalu restart frontend.
