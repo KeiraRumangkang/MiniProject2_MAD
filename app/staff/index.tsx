@@ -1,14 +1,16 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Dimensions, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { StaffErrorState, StaffHeader, StaffLoadingState, cardShadow } from './_shared';
+import { useAuthSession } from '@/lib/auth-session';
 
 const { width } = Dimensions.get('window');
 
 export default function StaffDashboard() {
   const stats = useQuery(api.dashboard.getStaffDashboardStats);
+  const { signOut } = useAuthSession();
 
   if (stats === undefined) {
     return <StaffLoadingState message="Menyiapkan dashboard staff..." />;
@@ -99,6 +101,19 @@ export default function StaffDashboard() {
             </View>
           </View>
 
+          <TouchableOpacity
+            style={styles.logoutButton}
+            onPress={() =>
+              Alert.alert('Logout', 'Keluar dari akun staff?', [
+                { text: 'Batal', style: 'cancel' },
+                { text: 'Keluar', style: 'destructive', onPress: () => void signOut('staff') },
+              ])
+            }
+          >
+            <Ionicons name="log-out-outline" size={16} color="#FFFFFF" />
+            <Text style={styles.logoutText}>Logout</Text>
+          </TouchableOpacity>
+
           <View style={{ height: 40 }} />
         </View>
       </ScrollView>
@@ -152,4 +167,19 @@ const styles = StyleSheet.create({
   infoDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#10B981', marginTop: 7, marginRight: 12 },
   infoText: { flex: 1, fontSize: 14, color: '#555', lineHeight: 20 },
   bold: { fontWeight: '700', color: '#333' },
+  logoutButton: {
+    marginTop: 16,
+    backgroundColor: '#EF4444',
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+  },
+  logoutText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 14,
+  },
 });

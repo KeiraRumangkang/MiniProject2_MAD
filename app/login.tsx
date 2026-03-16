@@ -10,7 +10,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("");
   const [loading, setLoading] = useState(false);
-  const { signIn, sessions, setActiveRole } = useAuthSession();
+  const { signIn, sessions, setActiveRole, signOutAll } = useAuthSession();
 
   // Kita gunakan query untuk mencari user berdasarkan input username
   // Note: Dalam aplikasi produksi, sebaiknya gunakan Action/Mutation untuk login 
@@ -135,6 +135,9 @@ export default function Login() {
               </TouchableOpacity>
             ))}
           </View>
+          <TouchableOpacity style={styles.clearSessionButton} onPress={() => void signOutAll()}>
+            <Text style={styles.clearSessionText}>Hapus semua session</Text>
+          </TouchableOpacity>
         </View>
       )}
     </View>
@@ -159,4 +162,6 @@ const styles = StyleSheet.create({
   quickButtons: { flexDirection: "row", justifyContent: "center", gap: 8 },
   quickButton: { backgroundColor: "#E2E8F0", paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
   quickText: { fontSize: 11, fontWeight: "800", color: "#334155" },
+  clearSessionButton: { marginTop: 8, alignSelf: 'center', paddingHorizontal: 10, paddingVertical: 6 },
+  clearSessionText: { color: '#EF4444', fontSize: 12, fontWeight: '700' },
 });

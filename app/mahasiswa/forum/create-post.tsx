@@ -39,7 +39,7 @@ export default function CreatePost() {
 
       router.back();
 
-    } catch (error) {
+    } catch {
 
       alert("Gagal membuat post");
 

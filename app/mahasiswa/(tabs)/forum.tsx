@@ -43,7 +43,7 @@ export default function Forum() {
         postId: postId as any,
         userId: "dummy_user_id" as any, // TODO: ganti pake auth session
       });
-    } catch (error) {
+    } catch {
       console.log("Sudah like");
     }
   };

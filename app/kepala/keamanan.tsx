@@ -46,7 +46,7 @@ export default function KeamananHalaman() {
       
       Alert.alert("Berhasil", "Kata sandi Anda telah diperbarui. Silakan gunakan kata sandi baru untuk login berikutnya.");
       router.back();
-    } catch (error) {
+    } catch {
       Alert.alert("Gagal", "Terjadi kesalahan sistem. Coba lagi nanti.");
     } finally {
       setLoading(false);

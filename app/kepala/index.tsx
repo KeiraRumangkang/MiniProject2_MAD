@@ -1,11 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { useRouter } from 'expo-router';
-
-const { width } = Dimensions.get('window');
 
 export default function KepalaDashboard() {
   const stats = useQuery(api.dashboard.getKepalaDashboardStats);

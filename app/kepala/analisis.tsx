@@ -72,7 +72,7 @@ export default function AnalisisKepala() {
                   onPress={() => handleTrendPress(item.keyword)}
                 >
                   <View style={styles.barLabelRow}>
-                    <Text style={styles.barLabel} numberOfLines={1}>"{item.keyword}"</Text>
+                    <Text style={styles.barLabel} numberOfLines={1}>{`"${item.keyword}"`}</Text>
                     <View style={styles.row}>
                       <Text style={styles.barValue}>{item.count}x</Text>
                       {item.count > maxSearch * 0.8 && (

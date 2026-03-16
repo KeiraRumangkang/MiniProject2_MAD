@@ -22,6 +22,7 @@ type AuthSessionContextType = {
   sessions: Partial<Record<Role, SessionUser>>;
   signIn: (user: SessionUser) => Promise<void>;
   signOut: (role?: Role) => Promise<void>;
+  signOutAll: () => Promise<void>;
   setActiveRole: (role: Role) => Promise<void>;
   getSessionForRole: (role: Role) => SessionUser | null;
 };
@@ -107,14 +108,12 @@ export function AuthSessionProvider({ children }: { children: React.ReactNode })
 
       const nextSessions = { ...state.sessions };
       delete nextSessions[targetRole];
-
-      const remainingRoles = Object.keys(nextSessions) as Role[];
       const next: SessionState = {
-        activeRole: state.activeRole === targetRole ? remainingRoles[0] ?? null : state.activeRole,
+        activeRole: state.activeRole === targetRole ? null : state.activeRole,
         sessions: nextSessions,
       };
 
-      if (!next.activeRole && remainingRoles.length === 0) {
+      if (Object.keys(nextSessions).length === 0) {
         await AsyncStorage.removeItem(SESSION_STORAGE_KEY);
         setState(next);
         return;
@@ -124,6 +123,11 @@ export function AuthSessionProvider({ children }: { children: React.ReactNode })
     },
     [persistState, state]
   );
+
+  const signOutAll = useCallback(async () => {
+    await AsyncStorage.removeItem(SESSION_STORAGE_KEY);
+    setState({ activeRole: null, sessions: {} });
+  }, []);
 
   const getSessionForRole = useCallback(
     (role: Role) => {
@@ -145,10 +149,11 @@ export function AuthSessionProvider({ children }: { children: React.ReactNode })
       sessions: state.sessions,
       signIn,
       signOut,
+      signOutAll,
       setActiveRole,
       getSessionForRole,
     }),
-    [activeSession, getSessionForRole, isHydrated, setActiveRole, signIn, signOut, state.activeRole, state.sessions]
+    [activeSession, getSessionForRole, isHydrated, setActiveRole, signIn, signOut, signOutAll, state.activeRole, state.sessions]
   );
 
   return <AuthSessionContext.Provider value={value}>{children}</AuthSessionContext.Provider>;
