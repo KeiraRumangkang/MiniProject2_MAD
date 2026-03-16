@@ -7,20 +7,11 @@ Repository ini memiliki 3 area utama aplikasi:
 - Staff
 - Kepala Perpustakaan
 
-Jika fokus pengembangan kamu hanya Staff, kerjakan file di folder app/staff.
-
 ## Tech Stack
 
 - Expo SDK 54
 - React Native + Expo Router
 - Convex untuk database, query, dan mutation backend
-
-## Struktur Penting
-
-- app/_layout.tsx: layout root dan inisialisasi Convex client
-- app/login.tsx: halaman login
-- app/staff: seluruh halaman Staff
-- convex: fungsi backend (query/mutation/action)
 
 ## Prasyarat
 
@@ -32,7 +23,7 @@ Jika fokus pengembangan kamu hanya Staff, kerjakan file di folder app/staff.
 
 1. Masuk ke folder project:
 
-   cd '/Users/gmeruntu_/David/JOKI 1/perpusmadev/MiniProject2_MAD'
+   cd '/perpusmadev/MiniProject2_MAD'
 
 2. Install dependency:
 
@@ -46,7 +37,7 @@ Penting: backend harus jalan dulu sebelum frontend agar EXPO_PUBLIC_CONVEX_URL v
 
 1. Masuk ke root project:
 
-   cd '/Users/gmeruntu_/David/JOKI 1/perpusmadev/MiniProject2_MAD'
+   cd '/perpusmadev/MiniProject2_MAD'
 
 2. Jalankan backend:
 
@@ -70,7 +61,7 @@ EXPO_PUBLIC_CONVEX_SITE_URL=https://nama-deployment.convex.site
 
 1. Masuk ke root project:
 
-   cd '/Users/gmeruntu_/David/JOKI 1/perpusmadev/MiniProject2_MAD'
+   cd '/perpusmadev/MiniProject2_MAD'
 
 2. Jalankan frontend web:
 
@@ -83,57 +74,6 @@ EXPO_PUBLIC_CONVEX_SITE_URL=https://nama-deployment.convex.site
 Untuk Android:
 
    npm run android
-
-## Script yang Dipakai
-
-- npm run start: jalankan Expo dev server umum
-- npm run web: jalankan frontend web
-- npm run android: jalankan frontend Android
-- npm run ios: jalankan frontend iOS
-- npm run lint: lint project
-
-## Fokus Pengembangan Staff
-
-Gunakan area berikut:
-- app/staff/index.tsx
-- app/staff/manajemen-buku.tsx
-- app/staff/peminjaman.tsx
-- app/staff/mahasiswa.tsx
-- app/staff/forum.tsx
-- app/staff/_layout.tsx
-
-Disarankan tidak mengubah area mahasiswa/kepala jika scope tugas hanya Staff.
-
-## Troubleshooting
-
-1) Error: No address provided to ConvexReactClient
-
-Penyebab:
-- Backend Convex belum berjalan
-- .env.local belum ada atau EXPO_PUBLIC_CONVEX_URL kosong
-
-Solusi:
-- Jalankan npx convex dev
-- Pastikan .env.local berisi EXPO_PUBLIC_CONVEX_URL
-- Restart frontend npm run web
-
-2) Error: Could not find public function for 'dashboard:getUserByUsername'
-
-Penyebab:
-- Fungsi backend belum tersinkron ke deployment dev
-
-Solusi:
-- Jalankan npx convex dev dari root project
-- Tunggu Convex functions ready
-- Refresh aplikasi
-
-3) Frontend tidak terbuka di web
-
-Solusi cek cepat:
-- Pastikan npm run web sedang aktif
-- Cek port 8081 aktif:
-
-  lsof -nP -iTCP:8081 -sTCP:LISTEN
 
 ## Catatan Operasional
 
