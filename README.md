@@ -69,7 +69,7 @@ EXPO_PUBLIC_CONVEX_SITE_URL=https://nama-deployment.convex.site
 
 3. Buka browser:
 
-   http://localhost:8081
+   http://localhost:[port]
 
 Untuk Android:
 
