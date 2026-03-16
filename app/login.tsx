@@ -13,7 +13,7 @@ export default function Login() {
   // Kita gunakan query untuk mencari user berdasarkan input username
   // Note: Dalam aplikasi produksi, sebaiknya gunakan Action/Mutation untuk login 
   // agar lebih aman, tapi untuk tahap ini kita gunakan data dari query.
-  const userData = useQuery(api.dashboard.getUserByUsername, { username: username.toLowerCase().trim() });
+  const userData = useQuery(api.users.getUserByUsername, { username: username.toLowerCase().trim() });
 
   const handleLogin = () => {
     if (!username || !password || !role) {
@@ -49,7 +49,7 @@ export default function Login() {
 
       // Jika semua oke, arahkan ke dashboard masing-masing
       setLoading(false);
-      if (role === "mahasiswa") router.replace("/mahasiswa");
+      if (role === "mahasiswa") router.replace("/mahasiswa/(tabs)");
       if (role === "staff") router.replace("/staff");
       if (role === "kepala") router.replace("/kepala");
     }, 800);

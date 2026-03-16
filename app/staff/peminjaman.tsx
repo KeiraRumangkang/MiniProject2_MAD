@@ -11,6 +11,7 @@ type TabType = 'requested' | 'borrowed' | 'late';
 
 export default function PeminjamanStaff() {
   const borrowings = useQuery(api.borrowings.getAllBorrowings);
+  const staffUsers = useQuery(api.dashboard.getAllStaff);
   const verifyBorrowing = useMutation(api.borrowings.verifyBorrowing);
   const returnBook = useMutation(api.borrowings.returnBook);
   const rejectBorrowing = useMutation(api.borrowings.rejectBorrowing);
@@ -26,8 +27,8 @@ export default function PeminjamanStaff() {
     );
   }
 
-  // Dummy staff ID — in production this should come from auth session
-  const dummyStaffId = "staff_placeholder";
+  // Sementara ambil staff pertama dari database sampai auth/session diterapkan.
+  const staffId = staffUsers?.[0]?._id;
 
   const filteredBorrowings = borrowings.filter((b) => {
     if (activeTab === 'requested') return b.effectiveStatus === 'requested';
@@ -58,6 +59,11 @@ export default function PeminjamanStaff() {
   ];
 
   const handleApprove = (borrowingId: string) => {
+    if (!staffId) {
+      Alert.alert('Akun Staff Tidak Ditemukan', 'Data staff belum siap. Coba lagi sebentar.');
+      return;
+    }
+
     Alert.alert(
       'Setujui Peminjaman',
       'Apakah Anda yakin ingin menyetujui peminjaman ini?',
@@ -69,7 +75,7 @@ export default function PeminjamanStaff() {
             try {
               await verifyBorrowing({
                 borrowingId: borrowingId as any,
-                staffId: dummyStaffId as any,
+                staffId: staffId as any,
               });
               Alert.alert('Berhasil', 'Peminjaman disetujui');
             } catch (error: any) {
@@ -82,6 +88,11 @@ export default function PeminjamanStaff() {
   };
 
   const handleReject = (borrowingId: string) => {
+    if (!staffId) {
+      Alert.alert('Akun Staff Tidak Ditemukan', 'Data staff belum siap. Coba lagi sebentar.');
+      return;
+    }
+
     Alert.alert(
       'Tolak Peminjaman',
       'Apakah Anda yakin ingin menolak permintaan ini?',
@@ -94,7 +105,7 @@ export default function PeminjamanStaff() {
             try {
               await rejectBorrowing({
                 borrowingId: borrowingId as any,
-                staffId: dummyStaffId as any,
+                staffId: staffId as any,
               });
               Alert.alert('Berhasil', 'Peminjaman ditolak');
             } catch (error: any) {
@@ -107,6 +118,11 @@ export default function PeminjamanStaff() {
   };
 
   const handleReturn = (borrowingId: string) => {
+    if (!staffId) {
+      Alert.alert('Akun Staff Tidak Ditemukan', 'Data staff belum siap. Coba lagi sebentar.');
+      return;
+    }
+
     Alert.alert(
       'Verifikasi Pengembalian',
       'Apakah buku sudah dikembalikan?',
@@ -118,7 +134,7 @@ export default function PeminjamanStaff() {
             try {
               await returnBook({
                 borrowingId: borrowingId as any,
-                staffId: dummyStaffId as any,
+                staffId: staffId as any,
               });
               Alert.alert('Berhasil', 'Pengembalian berhasil diverifikasi');
             } catch (error: any) {
@@ -243,6 +259,15 @@ export default function PeminjamanStaff() {
           </View>
         }
       />
+
+      {!staffId && (
+        <View style={styles.warningBanner}>
+          <Ionicons name="alert-circle" size={16} color="#92400E" />
+          <Text style={styles.warningText}>
+            Akun staff belum ditemukan. Aksi verifikasi dinonaktifkan.
+          </Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -310,4 +335,23 @@ const styles = StyleSheet.create({
   emptyState: { alignItems: 'center', paddingVertical: 60 },
   emptyTitle: { fontSize: 18, fontWeight: 'bold', color: '#333', marginTop: 12 },
   emptySubtitle: { fontSize: 13, color: '#757575', marginTop: 4, textAlign: 'center' },
+  warningBanner: {
+    marginHorizontal: 20,
+    marginBottom: 16,
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1,
+    borderColor: '#FCD34D',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  warningText: {
+    marginLeft: 8,
+    color: '#92400E',
+    fontSize: 12,
+    fontWeight: '600',
+    flex: 1,
+  },
 });
